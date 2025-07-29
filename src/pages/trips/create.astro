@@ -1,0 +1,195 @@
+---
+import Layout from '@layouts/base.astro';
+import { db, Trips } from 'astro:db';
+
+// Handle form submission
+if (Astro.request.method === 'POST') {
+  try {
+    const formData = await Astro.request.formData();
+    const user = Astro.locals.user;
+
+    if (!user) {
+      return Astro.redirect('/login');
+    }
+
+    const tripData = {
+      user_id: user.id,
+      title: formData.get('title') as string,
+      description: formData.get('description') as string,
+      date_start: new Date(formData.get('date_start') as string),
+      date_end: new Date(formData.get('date_end') as string),
+      ubicacion: formData.get('location') as string,
+      tags: JSON.parse(formData.get('tags') as string || '[]'),
+      images: JSON.parse(formData.get('images') as string || '[]'),
+      created_at: new Date(),
+      updated_at: new Date()
+    };
+
+    await db.insert(Trips).values(tripData);
+    return Astro.redirect('/trips');
+  } catch (error) {
+    console.error('Error creating trip:', error);
+  }
+}
+---
+
+<Layout title="Create New Trip">
+  <div class="container mx-auto px-4 py-8">
+    <div class="max-w-2xl mx-auto">
+      <div class="mb-6">
+        <a href="/trips" class="btn btn-ghost btn-sm">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+          Back to Trips
+        </a>
+      </div>
+
+      <div class="card bg-base-100 shadow-xl">
+        <div class="card-body">
+          <h1 class="card-title text-3xl mb-6">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            Create New Adventure
+          </h1>
+
+          <form method="POST" class="space-y-6">
+            <div class="form-control">
+              <label class="label">
+                <span class="label-text font-semibold">Trip Title *</span>
+              </label>
+              <input 
+                type="text" 
+                name="title" 
+                placeholder="e.g., Paris Getaway" 
+                class="input input-bordered" 
+                required 
+              />
+            </div>
+
+            <div class="form-control">
+              <label class="label">
+                <span class="label-text font-semibold">Description</span>
+              </label>
+              <textarea 
+                name="description" 
+                placeholder="Tell us about your adventure..."
+                class="textarea textarea-bordered h-24"
+              ></textarea>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="form-control">
+                <label class="label">
+                  <span class="label-text font-semibold">Start Date *</span>
+                </label>
+                <input 
+                  type="date" 
+                  name="date_start" 
+                  class="input input-bordered" 
+                  required 
+                />
+              </div>
+
+              <div class="form-control">
+                <label class="label">
+                  <span class="label-text font-semibold">End Date *</span>
+                </label>
+                <input 
+                  type="date" 
+                  name="date_end" 
+                  class="input input-bordered" 
+                  required 
+                />
+              </div>
+            </div>
+
+            <div class="form-control">
+              <label class="label">
+                <span class="label-text font-semibold">Location</span>
+              </label>
+              <input 
+                type="text" 
+                name="location" 
+                placeholder="e.g., Paris, France" 
+                class="input input-bordered" 
+              />
+            </div>
+
+            <div class="form-control">
+              <label class="label">
+                <span class="label-text font-semibold">Tags</span>
+                <span class="label-text-alt">Separate with commas</span>
+              </label>
+              <input 
+                type="text" 
+                id="tags-input"
+                placeholder="e.g., romantic, city, culture" 
+                class="input input-bordered" 
+              />
+              <input type="hidden" name="tags" id="tags-hidden" value="[]" />
+            </div>
+
+            <div class="form-control">
+              <label class="label">
+                <span class="label-text font-semibold">Images</span>
+                <span class="label-text-alt">Add image URLs</span>
+              </label>
+              <div id="image-inputs">
+                <input 
+                  type="url" 
+                  placeholder="https://example.com/image1.jpg" 
+                  class="input input-bordered mb-2" 
+                  onchange="updateImages()"
+                />
+              </div>
+              <button type="button" onclick="addImageInput()" class="btn btn-outline btn-sm">
+                Add Another Image
+              </button>
+              <input type="hidden" name="images" id="images-hidden" value="[]" />
+            </div>
+
+            <div class="form-control mt-8">
+              <button type="submit" class="btn btn-primary btn-lg">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                Create Adventure
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function addImageInput() {
+      const container = document.getElementById('image-inputs');
+      const input = document.createElement('input');
+      input.type = 'url';
+      input.placeholder = 'https://example.com/image.jpg';
+      input.className = 'input input-bordered mb-2';
+      input.onchange = updateImages;
+      container.appendChild(input);
+    }
+
+    function updateImages() {
+      const inputs = document.querySelectorAll('#image-inputs input[type="url"]');
+      const images = Array.from(inputs)
+        .map(input => input.value)
+        .filter(value => value.trim() !== '');
+      document.getElementById('images-hidden').value = JSON.stringify(images);
+    }
+
+    // Handle tags input
+    document.getElementById('tags-input').addEventListener('input', function(e) {
+      const tags = e.target.value
+        .split(',')
+        .map(tag => tag.trim())
+        .filter(tag => tag !== '');
+      document.getElementById('tags-hidden').value = JSON.stringify(tags);
+    });
+  </script>
+</Layout>

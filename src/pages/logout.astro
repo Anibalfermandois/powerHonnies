@@ -1,0 +1,5 @@
+---
+// Clear session cookie
+Astro.cookies.delete('session');
+return Astro.redirect('/login');
+---

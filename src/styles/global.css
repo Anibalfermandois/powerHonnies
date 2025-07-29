@@ -35,3 +35,23 @@
   --depth: 1;
   --noise: 1;
 }
+
+.love-gradient {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.trip-card {
+  transition: transform 0.2s ease-in-out;
+}
+
+.trip-card:hover {
+  transform: translateY(-4px);
+}
+
+.image-gallery img {
+  transition: transform 0.3s ease;
+}
+
+.image-gallery img:hover {
+  transform: scale(1.05);
+}

@@ -1,5 +1,9 @@
 ---
 import Layout from "@layouts/base.astro";
+import { db, Trips } from 'astro:db';
+
+// Get recent trips for the homepage
+const recentTrips = await db.select().from(Trips).limit(3);
 ---
 
 <Layout title="Home">
@@ -27,8 +31,68 @@ import Layout from "@layouts/base.astro";
       </p>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      <!-- Trip cards will be dynamically inserted here -->
+    <div class="container mx-auto px-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {recentTrips.map((trip) => {
+          const images = trip.images as string[] || [];
+          const tags = trip.tags as string[] || [];
+          const startDate = new Date(trip.date_start).toLocaleDateString();
+          
+          return (
+            <div class="card bg-base-100 shadow-xl trip-card">
+              <figure class="h-48 overflow-hidden">
+                {images.length > 0 ? (
+                  <img 
+                    src={images[0]} 
+                    alt={trip.title}
+                    class="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div class="w-full h-full bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-base-content opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                )}
+              </figure>
+              
+              <div class="card-body">
+                <h2 class="card-title">{trip.title}</h2>
+                <p class="text-sm text-base-content opacity-70 line-clamp-2">
+                  {trip.description}
+                </p>
+                
+                <div class="flex items-center text-sm text-base-content opacity-60 mb-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  {startDate}
+                </div>
+                
+                <div class="flex flex-wrap gap-1 mb-4">
+                  {tags.slice(0, 2).map((tag) => (
+                    <div class="badge badge-outline badge-sm">{tag}</div>
+                  ))}
+                </div>
+                
+                <div class="card-actions justify-end">
+                  <a href={`/trip/${trip.id}`} class="btn btn-primary btn-sm">
+                    View Details
+                  </a>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+        
+        {recentTrips.length === 0 && (
+          <div class="col-span-full text-center py-12">
+            <h3 class="text-xl font-semibold mb-2 text-white">No adventures yet!</h3>
+            <p class="text-white opacity-70 mb-4">Start documenting your travels together</p>
+            <a href="/trips/create" class="btn btn-primary">Create Your First Trip</a>
+          </div>
+        )}
+      </div>
     </div>
   </section>
 </Layout>
