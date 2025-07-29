@@ -121,6 +121,9 @@ const trips = await db.select().from(Trips).where(eq(Trips.user_id, user.id));
     </div>
   </section>
 
+  <!-- Add HTMX -->
+  <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+  
   <script>
     // Live search functionality
     document.getElementById('search-input').addEventListener('input', function(e) {
