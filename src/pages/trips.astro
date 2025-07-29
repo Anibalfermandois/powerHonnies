@@ -1,0 +1,28 @@
+---
+import Layout from '@layouts/base.astro'
+
+---
+<Layout title="trips">
+
+<section class="py-16">
+    <div class="text-center mb-12">
+        <h1 class="text-3xl font-bold mb-4">Our Adventures</h1>
+        <p class="text-lg text-base-content opacity-70">Explore all the places we've been</p>
+    </div>
+
+    <div class="flex justify-between items-center mb-8">
+        <input 
+            type="text" 
+            placeholder="Search trips..." 
+            class="input input-bordered w-full max-w-md"
+        />
+        <a href="/trips/create" class="btn btn-primary">
+            ➕ Add New Trip
+        </a>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Trip cards will be dynamically inserted here -->
+    </div>
+</section>
+</Layout>

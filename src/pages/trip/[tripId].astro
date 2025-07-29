@@ -1,0 +1,232 @@
+---
+export const prerender = false;
+const { tripId } = Astro.params;
+import { db, Trips, eq } from 'astro:db';
+import Layout from '@layouts/base.astro';
+import { Image } from 'astro:assets';
+import { getImage } from "astro:assets"
+
+
+
+const [trip] = await db.select().from(Trips).where(eq(Trips.id, Number(tripId)));
+const tags: string[] = trip.tags as string[];
+const images: string[] = trip.images as string[];
+const optimizedBackgroundImage = await getImage({ src: images[0],inferSize:true })
+// Mock location data for the map
+const mockLocation = {
+  name: trip.ubicacion || "Beautiful Location",
+  lat: 40.7128 + (Math.random() - 0.5) * 0.1,
+  lng: -74.0060 + (Math.random() - 0.5) * 0.1
+};
+---
+
+<Layout title={`${trip.title}`}>
+  <!-- Hero Section -->
+  <div class="hero min-h-[50vh] relative bg-contain bg-no-repeat" style={`background-image: url('${optimizedBackgroundImage.src}')`}>
+    <div class="hero-overlay bg-opacity-60"></div>
+    <div class="hero-content text-center text-neutral-content">
+      <div class="max-w-md">
+        <h1 class="mb-5 text-5xl font-bold text-white drop-shadow-lg">{trip.title}</h1>
+        <div class="badge bg-secondary bg-opacity-20 text-white border-secondary mb-4">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          {new Date(trip.date_start).toLocaleDateString()} - {new Date(trip.date_end).toLocaleDateString()}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container mx-auto px-4 py-8">
+    <!-- Back Button -->
+    <div class="mb-6">
+      <a href="/trips" class="btn btn-ghost btn-sm">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+        Back to Trips
+      </a>
+    </div>
+
+    <!-- Main Content Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      
+      <!-- Left Column - Trip Details -->
+      <div class="lg:col-span-2 space-y-6">
+        
+        <!-- Description Card -->
+        <div class="card bg-base-100 shadow-xl">
+          <div class="card-body">
+            <h2 class="card-title text-2xl mb-4">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253z" />
+              </svg>
+              Our Story
+            </h2>
+            <p class="text-base leading-relaxed">{trip.description}</p>
+            
+            <!-- Tags -->
+            <div class="flex flex-wrap gap-2 mt-6">
+              {tags.map((tag) => (
+                <div class="badge badge-primary badge-outline gap-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.997 1.997 0 013 12V7a4 4 0 014-4z" />
+                  </svg>
+                  {tag}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <!-- Photo Gallery -->
+        <div class="card bg-base-100 shadow-xl">
+          <div class="card-body">
+            <h2 class="card-title text-2xl mb-4">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              Photo Gallery
+            </h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {images.map((image, index) => (
+                <div class="relative group cursor-pointer">
+                  <Image
+                    src={image}
+                    alt={`${trip.title} photo ${index + 1}`}
+                    class="rounded-lg h-48 w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    inferSize
+                  />
+                  
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column - Map & Actions -->
+      <div class="space-y-6">
+        
+        <!-- Trip Stats -->
+        <div class="stats stats-vertical shadow-xl">
+          <div class="stat">
+            <div class="stat-figure text-primary">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </div>
+            <div class="stat-title">Location</div>
+            <div class="stat-value text-sm">{mockLocation.name}</div>
+          </div>
+          
+          <div class="stat">
+            <div class="stat-figure text-secondary">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <div class="stat-title">Photos</div>
+            <div class="stat-value">{images.length}</div>
+          </div>
+          
+          <div class="stat">
+            <div class="stat-figure text-accent">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.997 1.997 0 013 12V7a4 4 0 014-4z" />
+              </svg>
+            </div>
+            <div class="stat-title">Tags</div>
+            <div class="stat-value">{tags.length}</div>
+          </div>
+        </div>
+
+        <!-- Map Card -->
+        <div class="card bg-base-100 shadow-xl">
+          <div class="card-body">
+            <h2 class="card-title text-xl mb-4">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-1.447-.894L15 4m0 13V4m-6 3l6-3" />
+              </svg>
+              Location
+            </h2>
+            <div id="mock-map" class="bg-gradient-to-br from-green-200 to-blue-300 rounded-lg h-64 relative overflow-hidden">
+              <!-- Mock Map Content -->
+              <div class="absolute inset-0 opacity-20">
+                <svg viewBox="0 0 100 100" class="w-full h-full">
+                  <path d="M10,50 Q30,10 50,50 T90,50" stroke="#059669" stroke-width="0.5" fill="none" opacity="0.6"/>
+                  <path d="M20,60 Q40,20 60,60 T80,60" stroke="#0284c7" stroke-width="0.5" fill="none" opacity="0.6"/>
+                  <path d="M5,70 Q25,30 45,70 T85,70" stroke="#059669" stroke-width="0.5" fill="none" opacity="0.6"/>
+                </svg>
+              </div>
+              
+              <!-- Map Pin -->
+              <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                <div class="relative">
+                  <div class="w-6 h-6 bg-error rounded-full border-2  border-white shadow-lg animate-pulse"></div>
+                  <div class="absolute -bottom-1 left-1/2 transform -translate-x-1/2">
+                    <div class="w-1 h-3 bg-error"></div>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Coordinates -->
+              <div class="absolute bottom-2 left-2">
+                <div class="badge badge-ghost badge-sm bg-base-100 bg-opacity-80">
+                  {mockLocation.lat.toFixed(4)}, {mockLocation.lng.toFixed(4)}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="card bg-base-100 shadow-xl">
+          <div class="card-body">
+            <h2 class="card-title text-xl mb-4">Actions</h2>
+            <div class="space-y-3">
+              <button class="btn btn-primary w-full gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                Export as PDF
+              </button>
+              
+              <button class="btn btn-secondary w-full gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
+                </svg>
+                Share Trip
+              </button>
+              
+              <a href={`/trip/${tripId}/edit`} class="btn btn-outline w-full gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+                Edit Trip
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Add some interactivity to the mock map
+    document.addEventListener('DOMContentLoaded', function() {
+      const mockMap = document.getElementById('mock-map');
+      if (mockMap) {
+        mockMap.addEventListener('click', function() {
+          // Add a little animation when clicked
+          this.style.transform = 'scale(0.98)';
+          setTimeout(() => {
+            this.style.transform = 'scale(1)';
+          }, 150);
+        });
+      }
+    });
+  </script>
+</Layout>
